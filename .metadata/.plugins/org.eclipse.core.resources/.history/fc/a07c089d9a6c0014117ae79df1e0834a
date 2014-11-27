@@ -1,0 +1,8 @@
+package ndnex.dsu.androidrepo.db;
+
+import android.database.sqlite.SQLiteOpenHelper;
+
+public class DbHelper extends SQLiteOpenHelper{
+	
+	
+}

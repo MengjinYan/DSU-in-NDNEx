@@ -1,0 +1,10 @@
+package ndnex.dsu.androidrepo.db;
+
+public class AppFilterTlv {
+
+	/*
+	 * TLV Design:
+	 * Filter := FILTER-TYPE TLV-LENGTH
+	 * 			
+	 */
+}

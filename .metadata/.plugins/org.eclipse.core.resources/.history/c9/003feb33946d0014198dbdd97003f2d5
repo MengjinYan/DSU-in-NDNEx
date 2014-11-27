@@ -1,0 +1,61 @@
+package ndnex.dsu.androidrepo.db;
+
+public class AppFilterTlv {
+
+	/*
+	 * TLV Design:
+	 * Filter := FILTER-TYPE TLV-LENGTH
+	 * 				Bound
+	 * 				Precision
+	 * 				Frequency?
+	 * 
+	 * Bound := BOUND-TYPE TLV-LENGTH
+	 * 				BoundTime?
+	 * 				BoundLocation
+	 * 				BoundNumber
+	 * 				Text
+	 * 
+	 * Precision:= PRECISION-TYPE TLV-LENGTH
+	 * 				PrecisionTime
+	 * 				PrecisionLocation
+	 * 				PrecisionNumber
+	 * 
+	 * Frequency := FREQUENCY-TYPE TLV-LENGTH
+	 * 				FrequencyTime
+	 * 
+	 * BoundTime := BOUND-TIME-TYPE TLV-LENGTH
+	 * 				StartTime?
+	 * 				EndTime?
+	 * 
+	 * StartTime := START-TIME-TYPE TLV-LENGTH
+	 * 				NonNegativeInteger
+	 * 
+	 * EndTime := END-TIME-TYPE TLV-LENGTH
+	 * 				nonNegativeInteger
+	 * 
+	 * BoundLocation := BOUND-LOCATION-TYPE TLV-LENGTH
+	 * 					Format
+	 * 					Center
+	 * 					Radius
+	 * 
+	 * FORMAT := FORMAT-TYPE TLV-LENGTH
+	 * 				nonNegativeInteger
+	 * 
+	 * CENTER := CENTER-TYPE TLV-LENGTH
+	 * 				Latitude
+	 * 				Longitude
+	 * 
+	 * LATITUDE := LATITUDE-TYPE TLV-LENGTH
+	 * 				nonNegativeInteger
+	 * 
+	 * LONGITUDE := LONGITUDE-TYPE TLV-LENGTH
+	 * 				nonNegativeInteger
+	 * 
+	 * 
+	 */
+	
+	public static abstract class Format {
+		public static final int IN_CIRCLE = 0;
+		public static final int OUT_CIRCLE = 1;
+	}
+}

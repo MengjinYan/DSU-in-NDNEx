@@ -195,7 +195,7 @@ public class DbManager {
 		db.delete(DeviceInfo.TABLE_NAME, selection, selectionArgs);
 		
 		//delete the specific sensor data table
-		db.execSQL(DELETE_TABLE, selectionArgs);
+		
 	}
 	
 	/*

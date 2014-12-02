@@ -41,7 +41,6 @@ public class DbManager {
 			SensorData.COLUMN_NAME_TIMESTAMP + "BETWEEN" + "?" + "AND" + "?";
 	private static final String QUERY_LOCATION_BY_TIME = 
 			Location.COLUMN_NAME_TIME_STAMP + "BETWEEN" + "?" + "AND" + "?";
-	private static final String DELETE_TABLE = "DROP TABLE IF EXISTS ?";
 	
 	/*
 	 * Constructor
@@ -193,9 +192,6 @@ public class DbManager {
 		String[] selectionArgs = {deviceID};
 		// Issue SQL statement.
 		db.delete(DeviceInfo.TABLE_NAME, selection, selectionArgs);
-		
-		//delete the specific sensor data table
-		db.execSQL(DELETE_TABLE, selectionArgs);
 	}
 	
 	/*
@@ -235,11 +231,5 @@ public class DbManager {
 	}
 	
 
-	/*
-	 * Reset specific device data table
-	 */
-	public void resetSensorData(String deviceID) {
-		SQLiteDatabase db = mDbHelper.getWritableDatabase();
-		db.delete(deviceID, null, null);
-	}
+	public void 
 }

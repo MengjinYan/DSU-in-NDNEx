@@ -4,9 +4,11 @@
 <fullyQualifiedTypeName name="ndnex.dsu.androidrepo.db.DbContract.ACL"/>
 <fullyQualifiedTypeName name="java.lang.Integer"/>
 <fullyQualifiedTypeName name="net.named_data.jndn.security.KeyChain"/>
-<fullyQualifiedTypeName name="net.named_data.jndn.Signature"/>
 <fullyQualifiedTypeName name="net.named_data.jndn.Sha256WithRsaSignature"/>
-<fullyQualifiedTypeName name="net.named_data.jndn.Name"/>
 <fullyQualifiedTypeName name="ndnex.dsu.androidrepo.db.DbContract.Location"/>
 <fullyQualifiedTypeName name="ndnex.dsu.androidrepo.db.DbContract.SensorData"/>
+<fullyQualifiedTypeName name="net.named_data.jndn.Signature"/>
+<fullyQualifiedTypeName name="net.named_data.jndn.Name"/>
+<fullyQualifiedTypeName name="java.security.Signature"/>
+<fullyQualifiedTypeName name="ndnex.dsu.androidrepo.db.DbManager"/>
 </qualifiedTypeNameHistroy>

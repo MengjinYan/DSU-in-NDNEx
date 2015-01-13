@@ -1,6 +1,7 @@
 package ndnex.dsu.androidrepo.db;
 
-import ndnex.dsu.androidrepo.db.DbContract.ACL;
+import ndnex.dsu.androidrepo.db.DbContract.BL;
+import ndnex.dsu.androidrepo.db.DbContract.WL;
 import ndnex.dsu.androidrepo.db.DbContract.DeviceInfo;
 import ndnex.dsu.androidrepo.db.DbContract.Location;
 import ndnex.dsu.androidrepo.db.DbContract.SensorData;
@@ -29,12 +30,19 @@ public class DbHelper extends SQLiteOpenHelper{
 			DeviceInfo.COLUMN_NAME_DEVICE_NAME + STRING_TYPE + COMMA_SEP +
 			DeviceInfo.COLUMN_NAME_DEVICE_TYPE + INT_TYPE + 
 			")";
-	private static final String SQL_CREATE_ACL = 
-			"CREATE TABLE" + ACL.TABLE_NAME + "(" +
-			ACL._ID + "INTEGER PRIMARY KEY," + 
-			ACL.COLUMN_NAME_APP_NAME + BLOB_TYPE + COMMA_SEP +
-			ACL.COLUMN_NAME_APP_PUBLIC_KEY + BLOB_TYPE + COMMA_SEP +
-			ACL.COLUMN_NAME_APP_FILTER + BLOB_TYPE +
+	private static final String SQL_CREATE_WL = 
+			"CREATE TABLE" + WL.TABLE_NAME + "(" +
+			WL._ID + "INTEGER PRIMARY KEY," + 
+			WL.COLUMN_NAME_APP_NAME + BLOB_TYPE + COMMA_SEP +
+			WL.COLUMN_NAME_APP_PUBLIC_KEY_NAME + BLOB_TYPE + COMMA_SEP +
+			WL.COLUMN_NAME_APP_FILTER + BLOB_TYPE + COMMA_SEP +
+			WL.COLUMN_NAME_APP_EXPIRE_TIME + STRING_TYPE +
+			")";
+	private static final String SQL_CREATE_BL = 
+			"CREATE TABLE" + BL.TABLE_NAME + "(" +
+			BL._ID + "INTEGER PRIMARY KEY," + 
+			BL.COLUMN_NAME_APP_NAME + BLOB_TYPE + COMMA_SEP +
+			BL.COLUMN_NAME_APP_PUBLIC_KEY_NAME + BLOB_TYPE +
 			")";
 	private static final String SQL_CREATE_LOCATION = 
 			"CREATE TABLE" + Location.TABLE_NAME + "(" +
@@ -64,7 +72,8 @@ public class DbHelper extends SQLiteOpenHelper{
 	 */
 	public void onCreate(SQLiteDatabase db) {
 		db.execSQL(SQL_CREATE_DEVICE_INFO);
-		db.execSQL(SQL_CREATE_ACL);
+		db.execSQL(SQL_CREATE_WL);
+		db.execSQL(SQL_CREATE_BL);
 		db.execSQL(SQL_CREATE_LOCATION);
 	}
 	

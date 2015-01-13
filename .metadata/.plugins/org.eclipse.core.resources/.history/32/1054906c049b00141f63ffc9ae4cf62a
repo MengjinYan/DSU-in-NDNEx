@@ -1,0 +1,266 @@
+package ndnex.dsu.androidrepo.db;
+
+import ndnex.dsu.androidrepo.db.DbContract.BL;
+import ndnex.dsu.androidrepo.db.DbContract.WL;
+import ndnex.dsu.androidrepo.db.DbContract.DeviceInfo;
+import ndnex.dsu.androidrepo.db.DbContract.Location;
+import ndnex.dsu.androidrepo.db.DbContract.SensorData;
+import android.content.ContentValues;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
+
+/**
+ * Manage the data in the database
+ * @author Mengjin
+ */
+public class DbManager {
+	
+	public static DbHelper mDbHelper;
+	
+	private static final int IN_CIRCLE = 1;
+	private static final int OUT_CIRCEL = 2;
+	private static final String EQUAL = "=";
+	private static final String NOT_EQUAL = "<>";
+	private static final String GREATER_THAN = ">";
+	private static final String LESS_THAN = "<";
+	private static final String COMMA_SEP = ",";
+	private static final String QUERY_DEVICE_INFO = 
+			DeviceInfo.COLUMN_NAME_DEVICE_TYPE + EQUAL + "?";
+	private static final String QUERY_BL = 
+			BL.COLUMN_NAME_APP_PUBLIC_KEY_NAME + EQUAL + "?";
+	private static final String QUERY_WL = 
+			WL.COLUMN_NAME_APP_PUBLIC_KEY_NAME + EQUAL + "?";
+	private static final String QUERY_DATA = 
+			SensorData.COLUMN_NAME_TIMESTAMP + "BETWEEN" + "?" + "AND" + "?";
+	private static final String QUERY_LOCATION_BY_TIME = 
+			Location.COLUMN_NAME_TIME_STAMP + "BETWEEN" + "?" + "AND" + "?";
+	private static final String DELETE_TABLE = "DROP TABLE IF EXISTS ?";
+	
+	/*
+	 * Constructor
+	 */
+	public DbManager() {
+		mDbHelper = new DbHelper(null);
+	}
+	
+	/*
+	 * Insert data into Device Info table
+	 */
+	public void insertDeviceInfo(String deviceID, int deviceType) {
+		// Gets the data reposiroty in write mode
+		SQLiteDatabase db = mDbHelper.getWritableDatabase();
+		
+		// Create a new map of values, where column names are the keys
+		ContentValues values = new ContentValues();
+		values.put(DeviceInfo.COLUMN_NAME_DEVICE_NAME, deviceID);
+		values.put(DeviceInfo.COLUMN_NAME_DEVICE_TYPE, deviceType);
+		
+		// Insert the new row, returning the primary key value of the new row
+		long newRowId;
+		newRowId = db.insert(DeviceInfo.TABLE_NAME, null, values);
+	}
+	
+	/*
+	 * Insert data into white list table
+	 */
+	public void insertWl(byte[] appName, byte[] appPublicKeyName, byte[] appFilter, String appExpireTime) {
+		SQLiteDatabase db = mDbHelper.getWritableDatabase();
+		
+		ContentValues values = new ContentValues();
+		values.put(WL.COLUMN_NAME_APP_NAME, appName);
+		values.put(WL.COLUMN_NAME_APP_PUBLIC_KEY_NAME, appPublicKeyName);
+		values.put(WL.COLUMN_NAME_APP_FILTER, appFilter);
+		values.put(WL.COLUMN_NAME_APP_EXPIRE_TIME, appExpireTime);
+		
+		long newRowId;
+		newRowId = db.insert(WL.TABLE_NAME, null, values);
+	}
+	
+	/*
+	 * Insert data into black list table
+	 */
+	public void insertBl(byte[] appName, byte[] appPublicKeyName) {
+		SQLiteDatabase db = mDbHelper.getWritableDatabase();
+		
+		ContentValues values = new ContentValues();
+		values.put(BL.COLUMN_NAME_APP_NAME, appName);
+		values.put(BL.COLUMN_NAME_APP_PUBLIC_KEY_NAME, appPublicKeyName);
+		
+		long newRowId;
+		newRowId = db.insert(BL.TABLE_NAME, null, values);
+	}
+	
+	/*
+	 * Insert the data into the Location table
+	 */
+	public void insertLocation(int timeStamp, float latitude, float longtitude) {
+		SQLiteDatabase db = mDbHelper.getWritableDatabase();
+		
+		ContentValues values = new ContentValues();
+		values.put(Location.COLUMN_NAME_TIME_STAMP, timeStamp);
+		values.put(Location.COLUMN_NAME_LATITUDE, latitude);
+		values.put(Location.COLUMN_NAME_LONGITUDE, longtitude);
+		
+		long newRowId;
+		newRowId = db.insertOrThrow(Location.TABLE_NAME, null, values);
+	}
+	
+	/*
+	 * Insert data into specific data capture form
+	 */
+	public void insertData(String deviceName, int timeStamp, byte[] data) {
+		SQLiteDatabase db = mDbHelper.getWritableDatabase();
+		
+		ContentValues values = new ContentValues();
+		values.put(SensorData.COLUMN_NAME_TIMESTAMP, timeStamp);
+		values.put(SensorData.COLUMN_NAME_DATA, data);
+	
+		long newRowId;
+		newRowId = db.insert(deviceName, null, values);
+	}
+	
+	/*
+	 * Reading data from DeviceInfo table according to device type
+	 */
+	public Cursor readDeviceInfo(int deviceType) {
+		SQLiteDatabase db = mDbHelper.getReadableDatabase();
+		
+		String[] projection = {
+				DeviceInfo._ID,
+				DeviceInfo.COLUMN_NAME_DEVICE_NAME,
+				DeviceInfo.COLUMN_NAME_DEVICE_TYPE
+		};
+		
+		String sortOrder = 
+				DeviceInfo.COLUMN_NAME_DEVICE_NAME + "ASC";
+		String[] arg = {Integer.toString(deviceType)};
+		Cursor c = db.query(DeviceInfo.TABLE_NAME, projection, QUERY_DEVICE_INFO,
+							arg, null, null, sortOrder);
+		return c;
+	}
+
+	/*
+	 * Reading data from the white list table according to application names
+	 */
+	public static Cursor readWL(byte[] appPublicKeyName) {
+		SQLiteDatabase db = mDbHelper.getReadableDatabase();
+		
+		String[] projection = {
+				WL._ID,
+				WL.COLUMN_NAME_APP_NAME,
+				WL.COLUMN_NAME_APP_PUBLIC_KEY_NAME,
+				WL.COLUMN_NAME_APP_FILTER,
+				WL.COLUMN_NAME_APP_EXPIRE_TIME
+		};
+		String[] arg = {appPublicKeyName.toString()};
+		Cursor c = db.query(WL.TABLE_NAME, projection, QUERY_WL, arg, null, null, null);
+		return c;
+	}
+	
+	/*
+	 * Reading data from the black list table according to application names
+	 */
+	public static Cursor readBL(byte[] appPublicKeyName) {
+		SQLiteDatabase db = mDbHelper.getReadableDatabase();
+		String[] projectioin = {
+				BL._ID,
+				BL.COLUMN_NAME_APP_NAME,
+				BL.COLUMN_NAME_APP_PUBLIC_KEY_NAME
+		};
+	}
+	
+	/*
+	 * Reading data from Location tables according to time stamp
+	 */
+	public Cursor readLocationByTime(String timeStampStart, String timeStampEnd) {
+		SQLiteDatabase db = mDbHelper.getReadableDatabase();
+		
+		String[] projection = {
+				Location._ID,
+				Location.COLUMN_NAME_TIME_STAMP,
+				Location.COLUMN_NAME_LATITUDE,
+				Location.COLUMN_NAME_LONGITUDE
+		};
+		String[] arg = {timeStampStart, timeStampEnd};
+		Cursor c = db.query(Location.TABLE_NAME, projection, QUERY_LOCATION_BY_TIME, arg, null, null, null);
+		return c;
+	}
+	
+	/*
+	 * Reading data from data tables according to time stamp
+	 */
+	public Cursor readData(String deviceID, String timeStampStart, String timeStampEnd) {
+		SQLiteDatabase db = mDbHelper.getReadableDatabase();
+		String[] projection = {
+				SensorData._ID,
+				SensorData.COLUMN_NAME_TIMESTAMP,
+				SensorData.COLUMN_NAME_DATA
+		};
+		String sortOrder = 
+				SensorData.COLUMN_NAME_TIMESTAMP + "ASC";
+		String[] arg = {timeStampStart, timeStampEnd};
+		Cursor c = db.query(deviceID, projection, QUERY_DATA, arg, null, null, sortOrder);
+		return c;
+	}
+	
+	/*
+	 * Delete data from Device Info table
+	 */
+	public void deleteDevice(String deviceID) {
+		SQLiteDatabase db = mDbHelper.getWritableDatabase();
+		// Define 'where' part of query.
+		String selection = DeviceInfo.COLUMN_NAME_DEVICE_NAME + EQUAL + "?";
+		// Specify arguments in placeholder order.
+		String[] selectionArgs = {deviceID};
+		// Issue SQL statement.
+		db.delete(DeviceInfo.TABLE_NAME, selection, selectionArgs);
+		
+		//delete the specific sensor data table
+		db.execSQL(DELETE_TABLE, selectionArgs);
+	}
+	
+	/*
+	 * Delete app from ACL table
+	 */
+	public void deleteApp(String appName) {
+		SQLiteDatabase db = mDbHelper.getWritableDatabase();
+		String selection = ACL.COLUMN_NAME_APP_NAME + EQUAL + "?";
+		String[] selectionArgs = {appName};
+		db.delete(ACL.TABLE_NAME, selection, selectionArgs);
+	}
+	
+	/*
+	 * Delete data from specific device according to timestamp
+	 */
+	public void deleteData(String deviceID, String timeStampStart, String timeStampEnd) {
+		SQLiteDatabase db = mDbHelper.getWritableDatabase();
+		String selection = SensorData.COLUMN_NAME_TIMESTAMP + "BETWEEN ? AND ?";
+		String[] selectionArgs = {timeStampStart, timeStampEnd};
+		db.delete(deviceID, selection, selectionArgs);
+	}
+	
+	/*
+	 * Reset Device Info table
+	 */
+	public void resetDeviceInfo() {
+		SQLiteDatabase db = mDbHelper.getWritableDatabase();
+		db.delete(DeviceInfo.TABLE_NAME, null, null);
+	}
+	
+	/*
+	 * Reset ACL table
+	 */
+	public void resetACL() {
+		SQLiteDatabase db = mDbHelper.getWritableDatabase();
+		db.delete(ACL.TABLE_NAME, null, null);
+	}
+	
+
+	/*
+	 * Reset specific device data table
+	 */
+	public void resetSensorData(String deviceID) {
+		SQLiteDatabase db = mDbHelper.getWritableDatabase();
+		db.delete(deviceID, null, null);
+	}
+}

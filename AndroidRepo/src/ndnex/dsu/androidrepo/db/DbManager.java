@@ -1,19 +1,10 @@
 package ndnex.dsu.androidrepo.db;
 
-import java.security.KeyFactory;
-import java.security.Signature;
-import java.security.interfaces.RSAPublicKey;
-import java.security.spec.X509EncodedKeySpec;
-
-import ndnex.dsu.androidrepo.db.DbContract.ACL;
+import ndnex.dsu.androidrepo.db.DbContract.BL;
+import ndnex.dsu.androidrepo.db.DbContract.WL;
 import ndnex.dsu.androidrepo.db.DbContract.DeviceInfo;
 import ndnex.dsu.androidrepo.db.DbContract.Location;
 import ndnex.dsu.androidrepo.db.DbContract.SensorData;
-import net.named_data.jndn.Interest;
-import net.named_data.jndn.Name;
-import net.named_data.jndn.Name.Component;
-import net.named_data.jndn.security.OnVerifiedInterest;
-import net.named_data.jndn.security.OnVerifyInterestFailed;
 import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
@@ -35,8 +26,10 @@ public class DbManager {
 	private static final String COMMA_SEP = ",";
 	private static final String QUERY_DEVICE_INFO = 
 			DeviceInfo.COLUMN_NAME_DEVICE_TYPE + EQUAL + "?";
-	private static final String QUERY_ACL = 
-			ACL.COLUMN_NAME_APP_NAME + EQUAL + "?";
+	private static final String QUERY_BL = 
+			BL.COLUMN_NAME_APP_PUBLIC_KEY_NAME + EQUAL + "?";
+	private static final String QUERY_WL = 
+			WL.COLUMN_NAME_APP_PUBLIC_KEY_NAME + EQUAL + "?";
 	private static final String QUERY_DATA = 
 			SensorData.COLUMN_NAME_TIMESTAMP + "BETWEEN" + "?" + "AND" + "?";
 	private static final String QUERY_LOCATION_BY_TIME = 
@@ -68,18 +61,33 @@ public class DbManager {
 	}
 	
 	/*
-	 * Insert data into acl table
+	 * Insert data into white list table
 	 */
-	public void insertAcl(byte[] appName, byte[] appPublicKey, byte[] appFilter) {
+	public void insertWl(byte[] appName, byte[] appPublicKeyName, byte[] appFilter, String appExpireTime) {
 		SQLiteDatabase db = mDbHelper.getWritableDatabase();
 		
 		ContentValues values = new ContentValues();
-		values.put(ACL.COLUMN_NAME_APP_NAME, appName);
-		values.put(ACL.COLUMN_NAME_APP_PUBLIC_KEY, appPublicKey);
-		values.put(ACL.COLUMN_NAME_APP_FILTER, appFilter);
+		values.put(WL.COLUMN_NAME_APP_NAME, appName);
+		values.put(WL.COLUMN_NAME_APP_PUBLIC_KEY_NAME, appPublicKeyName);
+		values.put(WL.COLUMN_NAME_APP_FILTER, appFilter);
+		values.put(WL.COLUMN_NAME_APP_EXPIRE_TIME, appExpireTime);
 		
 		long newRowId;
-		newRowId = db.insert(ACL.TABLE_NAME, null, values);
+		newRowId = db.insert(WL.TABLE_NAME, null, values);
+	}
+	
+	/*
+	 * Insert data into black list table
+	 */
+	public void insertBl(byte[] appName, byte[] appPublicKeyName) {
+		SQLiteDatabase db = mDbHelper.getWritableDatabase();
+		
+		ContentValues values = new ContentValues();
+		values.put(BL.COLUMN_NAME_APP_NAME, appName);
+		values.put(BL.COLUMN_NAME_APP_PUBLIC_KEY_NAME, appPublicKeyName);
+		
+		long newRowId;
+		newRowId = db.insert(BL.TABLE_NAME, null, values);
 	}
 	
 	/*
@@ -132,19 +140,35 @@ public class DbManager {
 	}
 
 	/*
-	 * Reading data from the ACL table according to application names
+	 * Reading data from the white list table according to application names
 	 */
-	public static Cursor readACL(String appName) {
+	public static Cursor readWL(byte[] appPublicKeyName) {
 		SQLiteDatabase db = mDbHelper.getReadableDatabase();
 		
 		String[] projection = {
-				ACL._ID,
-				ACL.COLUMN_NAME_APP_NAME,
-				ACL.COLUMN_NAME_APP_PUBLIC_KEY,
-				ACL.COLUMN_NAME_APP_FILTER
+				WL._ID,
+				WL.COLUMN_NAME_APP_NAME,
+				WL.COLUMN_NAME_APP_PUBLIC_KEY_NAME,
+				WL.COLUMN_NAME_APP_FILTER,
+				WL.COLUMN_NAME_APP_EXPIRE_TIME
 		};
-		String[] arg = {appName};
-		Cursor c = db.query(ACL.TABLE_NAME, projection, QUERY_ACL, arg, null, null, null);
+		String[] arg = {appPublicKeyName.toString()};
+		Cursor c = db.query(WL.TABLE_NAME, projection, QUERY_WL, arg, null, null, null);
+		return c;
+	}
+	
+	/*
+	 * Reading data from the black list table according to application names
+	 */
+	public static Cursor readBL(byte[] appPublicKeyName) {
+		SQLiteDatabase db = mDbHelper.getReadableDatabase();
+		String[] projection = {
+				BL._ID,
+				BL.COLUMN_NAME_APP_NAME,
+				BL.COLUMN_NAME_APP_PUBLIC_KEY_NAME
+		};
+		String[] arg = {appPublicKeyName.toString()};
+		Cursor c = db.query(BL.TABLE_NAME, projection, QUERY_BL, arg, null, null, null);
 		return c;
 	}
 	
@@ -199,13 +223,13 @@ public class DbManager {
 	}
 	
 	/*
-	 * Delete app from ACL table
+	 * Delete app from WL table
 	 */
-	public void deleteApp(String appName) {
+	public void deleteWLApp(byte[] appPublicKeyName) {
 		SQLiteDatabase db = mDbHelper.getWritableDatabase();
-		String selection = ACL.COLUMN_NAME_APP_NAME + EQUAL + "?";
-		String[] selectionArgs = {appName};
-		db.delete(ACL.TABLE_NAME, selection, selectionArgs);
+		String selection = WL.COLUMN_NAME_APP_PUBLIC_KEY_NAME + EQUAL + "?";
+		String[] selectionArgs = {appPublicKeyName.toString()};
+		db.delete(WL.TABLE_NAME, selection, selectionArgs);
 	}
 	
 	/*
@@ -227,11 +251,19 @@ public class DbManager {
 	}
 	
 	/*
-	 * Reset ACL table
+	 * Reset WL table
 	 */
-	public void resetACL() {
+	public void resetWL() {
 		SQLiteDatabase db = mDbHelper.getWritableDatabase();
-		db.delete(ACL.TABLE_NAME, null, null);
+		db.delete(WL.TABLE_NAME, null, null);
+	}
+	
+	/*
+	 * Reset RL table
+	 */
+	public void resetBL() {
+		SQLiteDatabase db = mDbHelper.getWritableDatabase();
+		db.delete(WL.TABLE_NAME, null, null);
 	}
 	
 
